@@ -1,13 +1,14 @@
-import pandas
-import numpy
+import pandas as pd
 import matplotlib.pyplot as plt
 from sklearn.model_selection import train_test_split
 from sklearn.ensemble import RandomForestClassifier
 from sklearn import metrics
 
+dir_data = './data/'
+dir_artifacts = './artifacts/'
+
 # random forest
-# ensemble
-# CNNs
+# CNNs (pytorch vs. tensorflow)
 
 def validate(data):
   return(data.isnull().any())
@@ -16,20 +17,14 @@ def normalize(data):
   normalized = data / 255.0
   return(normalized)
 
-def renderDigitImage(digit, pixels, title):
-  plt.subplot(330 + (i+1))
-  plt.imshow(pixels, cmap=plt.get_cmap('gray'))
-  plt.title(title)
-  plt.show()
+if __name__ == '__main__':
 
-if __name__ == "__main__":
-
-  print("~ training started ~")
+  print('~ training started ~')
 
   # Load Data
   # ---------
-  train = pandas.read_csv('data/train.csv')
-  test = pandas.read_csv('data/test.csv')
+  train = pd.read_csv(dir_data + 'train.csv')
+  test = pd.read_csv(dir_data + 'test.csv')
 
   # Validate Data
   # -------------
@@ -67,13 +62,16 @@ if __name__ == "__main__":
 
   # Model
   # -----
-  clf=RandomForestClassifier(n_estimators=100)
-  clf.fit(X_train,Y_train)
+  model = RandomForestClassifier(n_estimators=100)
+  model.fit(X_train,Y_train)
+
+  # Validate
+  # -------
+  Y_pred=model.predict(X_val)
+  print('Accuracy:', metrics.accuracy_score(Y_val, Y_pred))
 
   # Predict
   # -------
-  Y_pred=clf.predict(X_val)
-
-  # Accuracy
-  # --------
-  print("Accuracy:", metrics.accuracy_score(Y_val, Y_pred))
+  predictions = model.predict(X_test)
+  submissions=pd.DataFrame({'ImageId': list(range(1,len(predictions)+1)), 'Label': predictions})
+  submissions.to_csv(dir_artifacts + 'predictions-random-forest.csv', index=False, header=True)

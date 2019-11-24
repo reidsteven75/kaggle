@@ -1,12 +1,22 @@
 version: '3'
 services:
 
-  train:
+  classifier-random-forest:
     env_file: .env
     build:
-      context: ./
-    restart: "no"
+      context: ./models/random-forest
     volumes:
-      - .:/code
+        - ./data:/code/data
+        - ./artifacts:/code/artifacts
     ports:
-      - "${PORT}:${PORT}"
+      - "${PORT_RANDOM_FOREST}:${PORT_RANDOM_FOREST}"
+
+  classifier-mnist:
+    env_file: .env
+    build:
+      context: ./models/mnist
+    volumes:
+        - ./data:/code/data
+        - ./artifacts:/code/artifacts
+    ports:
+      - "${PORT_MNIST}:${PORT_MNIST}"
