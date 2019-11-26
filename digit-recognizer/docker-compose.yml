@@ -11,10 +11,10 @@ services:
     ports:
       - "${PORT_RANDOM_FOREST}:${PORT_RANDOM_FOREST}"
 
-  classifier-mnist:
+  classifier-neural-net:
     env_file: .env
     build:
-      context: ./models/mnist
+      context: ./models/neural-net
     volumes:
         - ./data:/code/data
         - ./artifacts:/code/artifacts
