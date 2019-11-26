@@ -105,8 +105,8 @@ if __name__ == '__main__':
     tf.keras.layers.Dropout(0.2),
     tf.keras.layers.Dense(10, activation='softmax')
   ])
-  print("input shape ",model.input_shape)
-  print("output shape ",model.output_shape)
+  print('input shape: ', model.input_shape)
+  print('output shape: ', model.output_shape)
 
   model.compile(optimizer='adam',
                 loss='categorical_crossentropy',
