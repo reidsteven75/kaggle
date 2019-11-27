@@ -1,0 +1,8 @@
+# common files
+.DS_Store
+
+# common directories
+**/artifacts/*
+
+
+

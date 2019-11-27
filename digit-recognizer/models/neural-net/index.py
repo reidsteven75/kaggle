@@ -35,9 +35,6 @@ def print_dataset_stats(X_train, Y_train, X_val, Y_val, X_test):
   ]
   print(tabulate(table, headers=header, tablefmt='fancy_grid'))
 
-def decode(datum):
-  return np.argmax(datum)
-
 def decode_predictions(predictions):
   decoded = []
   for i in range(predictions.shape[0]):
@@ -66,8 +63,8 @@ if __name__ == '__main__':
   # Load Data
   # ---------
   print('~ loading data ~')
-  train = pd.read_csv(DIR_DATA + 'train.csv')
-  test = pd.read_csv(DIR_DATA + 'test.csv')
+  train = pd.read_csv(DIR_DATA + 'train.csv', dtype='float64')
+  test = pd.read_csv(DIR_DATA + 'test.csv', dtype='float64')
 
   # Validate Data
   # -------------
@@ -96,10 +93,21 @@ if __name__ == '__main__':
   X_train, X_val, Y_train, Y_val = train_test_split(X_train, Y_train, test_size=VAL_TRAIN_RATIO, random_state=2)
   print_dataset_stats(X_train, Y_train, X_val, Y_val, X_test)
 
+# 0.9748
+
   # Model
   # -----
   print('~ compiling model ~')
   model = tf.keras.models.Sequential([
+    tf.keras.layers.Conv2D(filters=32, kernel_size=(5,5),padding='Same', activation='relu', input_shape=(28,28,1)),
+    tf.keras.layers.Conv2D(filters=32, kernel_size=(5,5),padding='Same', activation='relu'),
+    tf.keras.layers.MaxPool2D(pool_size=(2,2)),
+    tf.keras.layers.Dropout(0.25),
+    tf.keras.layers.Conv2D(filters=64, kernel_size=(3,3),padding='Same', activation='relu'),
+    tf.keras.layers.Conv2D(filters=64, kernel_size=(3,3),padding='Same', activation='relu'),
+    tf.keras.layers.MaxPool2D(pool_size=(2,2), strides=(2,2)),
+    tf.keras.layers.Dropout(0.25),
+    tf.keras.layers.Flatten(),
     tf.keras.layers.Flatten(input_shape=(28, 28, 1)),
     tf.keras.layers.Dense(128, activation='relu'),
     tf.keras.layers.Dropout(0.2),
@@ -123,7 +131,9 @@ if __name__ == '__main__':
   # Predict
   # -------
   print('~ predicting ~')
-  predictions = decode_predictions(model.predict(np.array(X_test)))
+  predictions = model.predict(X_test)
+  predictions = np.argmax(predictions,axis=1)
+  predictions = pd.Series(predictions, name='Label')
   submissions=pd.DataFrame({'ImageId': list(range(1,len(predictions)+1)), 'Label': predictions})
 
   # Generate Artifact(s)
