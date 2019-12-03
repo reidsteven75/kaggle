@@ -101,15 +101,26 @@ utils.print_dataset_stats(X_train, Y_train, X_val, Y_val, X_test)
 
 # Model
 # -----
+print('~ training model ~')
 model = RandomForestRegressor(n_estimators=100)
 model.fit(X_train,Y_train)
 
 # Validate
-# -------
+# --------
+print('~ validating model ~')
 print('Accuracy:', model.score(X_val, Y_val))
 
 # Predict
 # -------
+print('~ predicting ~')
 predictions = model.predict(X_test)
+predictions = np.exp(predictions) # reverse log function 
+print(predictions)
+
+# Create Artifact
+# ---------------
+print('~ generating artifacts ~')
 submissions=pd.DataFrame({'Id': list(range(1,len(predictions)+1)), 'SalePrice': predictions})
 submissions.to_csv(dir_artifacts + 'predictions-random-forest.csv', index=False, header=True)
+
+print('~ done ~')
