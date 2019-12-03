@@ -1,7 +1,17 @@
 version: '3'
 services:
 
-  classifier-random-forest:
+  notebook:
+    env_file: .env
+    build:
+      context: .
+      dockerfile: Dockerfile.jupyter
+    volumes:
+        - ./models/random-forest/pipeline.py:/notebooks/pipeline.py
+    ports:
+      - "${PORT_NOTEBOOK}:${PORT_NOTEBOOK}"
+
+  regression-random-forest:
     env_file: .env
     build:
       context: ./models/random-forest
@@ -11,7 +21,7 @@ services:
     ports:
       - "${PORT_RANDOM_FOREST}:${PORT_RANDOM_FOREST}"
 
-  classifier-neural-net:
+  regression-neural-net:
     env_file: .env
     build:
       context: ./models/neural-net

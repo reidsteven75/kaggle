@@ -11,7 +11,7 @@ dir_artifacts = './artifacts/'
 # CNNs (pytorch vs. tensorflow)
 
 def validate(data):
-  return(data.isnull().any())
+  return(data.isnull().any().any())
 
 def normalize(data):
   normalized = data / 255.0
@@ -28,8 +28,10 @@ if __name__ == '__main__':
 
   # Validate Data
   # -------------
-  validate(train)
-  validate(test)
+  print('~ validating data ~')
+  if (validate(train) == True or validate(test) == True):
+    print('dataset(s) not formatted correctly')
+    quit()
 
   # Visually Inspect Data
   # ---------------------
