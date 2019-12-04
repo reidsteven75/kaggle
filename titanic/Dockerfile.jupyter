@@ -1,0 +1,9 @@
+FROM jupyter/datascience-notebook
+
+# Set working dir
+WORKDIR /notebooks
+
+# # Copy code
+# COPY . /code
+
+# CMD [ "python3", "./index.py" ]

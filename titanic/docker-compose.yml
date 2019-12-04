@@ -20,3 +20,13 @@ services:
         - ./artifacts:/code/artifacts
     ports:
       - "${PORT_RANDOM_FOREST}:${PORT_RANDOM_FOREST}"
+
+  regression-neural-net:
+    env_file: .env
+    build:
+      context: ./models/neural-net
+    volumes:
+        - ./data:/code/data
+        - ./artifacts:/code/artifacts
+    ports:
+      - "${PORT_NEURAL_NET}:${PORT_NEURAL_NET}"

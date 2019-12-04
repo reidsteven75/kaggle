@@ -5,6 +5,22 @@ import numpy as np
 from sklearn.preprocessing import OneHotEncoder
 from tabulate import tabulate
 
+def printScoreResultsKFold(model_score_results):
+  header = ['MODEL', 'ACCURACY (avg)', 'VARIANCE (max-min)']
+  table = []
+  for result in model_score_results:
+    accuracy = np.average(result['score'])
+    variance = np.max(result['score']) - np.min(result['score'])
+    table.append([result['model'], accuracy, variance])
+  print(tabulate(table, headers=header, tablefmt='fancy_grid'))
+
+def printScoreResultsTrainVal(model_score_results, score_type=''):
+  header = ['MODEL', 'ACCURACY ' + '(' + score_type + ')']
+  table = []
+  for result in model_score_results:
+    table.append([result['model'], result['score']])
+  print(tabulate(table, headers=header, tablefmt='fancy_grid'))
+
 def print_dataset_stats(X_train, Y_train, X_val, Y_val, X_test):
   count_train = np.size(X_train, 0)
   count_val = np.size(X_val, 0)
@@ -50,14 +66,14 @@ def outlierAnalysis(dataset, target):
   plt.tight_layout(h_pad=1.0)
   plt.show()
 
-def visualize_correlations(dataset, y, num):
+def visualizeCorrelations(dataset, y, num):
   correlation = dataset.select_dtypes(exclude='object').corr()
   sns.heatmap(data=correlation>0.80, cmap='YlGnBu', annot=True)
   plt.show()
   top_correlated_features = correlation[y].sort_values(ascending=False).head(num)
   print(top_correlated_features)
 
-def visualize_skew(dataset, target):
+def visualizeSkew(dataset, target):
   y = dataset[target]
   sns.distplot(y)
   plt.title('Raw')

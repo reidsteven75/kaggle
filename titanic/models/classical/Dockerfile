@@ -1,4 +1,4 @@
-FROM tensorflow/tensorflow:latest-py3
+FROM python:3
 
 # Set working dir
 WORKDIR /code
