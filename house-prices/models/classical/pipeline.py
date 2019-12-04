@@ -22,19 +22,10 @@ import utils
 import warnings
 warnings.simplefilter(action='ignore', category=FutureWarning) 
 
-# FEATURE ENGINEERING
-# ===================
-# Features with a high percentage of missing values
-# Collinear (highly correlated) features
-# Features with zero importance in a tree-based model
-# Features with low importance
-# Features with a single unique value
-
 # PERFORMANCE INCREASE IDEAS
 # ==========================
 # - see if imputation helps improve accuracy
 # - hyper-parameter tuning
-
 
 # PERFORMANCE VALIDATION IDEAS
 # ============================
@@ -48,7 +39,7 @@ dir_artifacts = '../../artifacts/'
 
 VAL_TRAIN_RATIO = 0.3  # VAL / TEST
 NUM_CORRELATIONS = 15
-CROSS_VALIDATION_K_FOLDS = 2
+CROSS_VALIDATION_K_FOLDS = 10
 
 print('~ loading data ~')
 
@@ -65,13 +56,13 @@ all_data = pd.concat((train.loc[:,'MSSubClass':'SaleCondition'],
 # Un-Skew (Log Transform)
 # -----------------------
 print('~ unskewing ~')
-# visualizeSkew(train, 'SalePrice')
+# utils.visualizeSkew(train, 'SalePrice')
 train['SalePrice'] = np.log(train['SalePrice'])
 
 # Correlations
 # ------------
 print('~ correlation analysis ~')
-# visualizeCorrelations(train, 'SalePrice', NUM_CORRELATIONS)
+# utils.visualizeCorrelations(train, 'SalePrice', NUM_CORRELATIONS)
 
 remove_columns = ['MiscVal', 'MSSubClass', 'MoSold', 'YrSold', 'GarageArea', 'GarageYrBlt', 'TotRmsAbvGrd']
 all_data = all_data.drop(remove_columns, axis=1)
@@ -88,7 +79,7 @@ clean_train = pd.concat([all_data[:train.shape[0]], train.SalePrice], axis=1)
 # Outlier Analysis
 # ----------------
 print('~ outlier analysis ~')
-# outlierAnalysis(train, 'SalePrice')
+# utils.outlierAnalysis(train, 'SalePrice')
 utils.dropOutliers(clean_train, 'LotFrontage', 220)
 utils.dropOutliers(clean_train, 'LotArea', 110000)
 utils.dropOutliers(clean_train, 'BsmtFinSF1', 2500)

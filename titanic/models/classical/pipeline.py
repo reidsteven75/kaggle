@@ -1,16 +1,14 @@
 #!/usr/bin/python
-import math
 import pandas as pd
 import numpy as np
-import seaborn as sns
-import matplotlib.pyplot as plt
 from tabulate import tabulate
 from sklearn.pipeline import Pipeline
 from sklearn.impute import SimpleImputer # handling missing variables: categorical, numerical
 from sklearn.preprocessing import LabelEncoder 
-from sklearn.ensemble import RandomForestRegressor
-from sklearn.ensemble import GradientBoostingRegressor
-from sklearn.ensemble import AdaBoostRegressor
+from sklearn.ensemble import RandomForestClassifier
+from sklearn.ensemble import AdaBoostClassifier
+from sklearn.ensemble import GradientBoostingClassifier
+from sklearn.linear_model import LogisticRegression
 from sklearn.model_selection import train_test_split
 from sklearn.model_selection import cross_val_score
 from sklearn.model_selection import cross_val_predict
@@ -22,23 +20,11 @@ import utils
 import warnings
 warnings.simplefilter(action='ignore', category=FutureWarning) 
 
-# FEATURE ENGINEERING
-# ===================
-# Features with a high percentage of missing values
-# Collinear (highly correlated) features
-# Features with zero importance in a tree-based model
-# Features with low importance
-# Features with a single unique value
-
 # PERFORMANCE INCREASE IDEAS
 # ==========================
-# - see if imputation helps improve accuracy
-# - hyper-parameter tuning
-
-
-# PERFORMANCE VALIDATION IDEAS
-# ============================
-# - look into bias, variance library - http://rasbt.github.io/mlxtend/user_guide/evaluate/bias_variance_decomp/
+# - married / not married
+# - classify males as married if their last name matches a female with the same last name
+# - classify name titles
 
 dir_data = '../../data/'
 dir_artifacts = '../../artifacts/'
@@ -46,9 +32,10 @@ dir_artifacts = '../../artifacts/'
 # dir_data = './data/'
 # dir_artifacts = './artifacts/'
 
+TARGET = 'Survived'
 VAL_TRAIN_RATIO = 0.3  # VAL / TEST
 NUM_CORRELATIONS = 15
-CROSS_VALIDATION_K_FOLDS = 2
+CROSS_VALIDATION_K_FOLDS = 10
 
 print('~ loading data ~')
 
@@ -57,50 +44,79 @@ print('~ loading data ~')
 train = pd.read_csv(dir_data + 'train.csv', index_col=0)
 test = pd.read_csv(dir_data + 'test.csv', index_col=0)
 
-all_data = pd.concat((train.loc[:,'MSSubClass':'SaleCondition'],
-                      test.loc[:,'MSSubClass':'SaleCondition']))
-
-# print('Features: ' + str(len(train.columns)))
-
-# Un-Skew (Log Transform)
-# -----------------------
-print('~ unskewing ~')
-# visualizeSkew(train, 'SalePrice')
-train['SalePrice'] = np.log(train['SalePrice'])
+all_data = pd.concat([train.drop(TARGET, axis=1), test])
 
 # Correlations
 # ------------
 print('~ correlation analysis ~')
-# visualizeCorrelations(train, 'SalePrice', NUM_CORRELATIONS)
-
-remove_columns = ['MiscVal', 'MSSubClass', 'MoSold', 'YrSold', 'GarageArea', 'GarageYrBlt', 'TotRmsAbvGrd']
-all_data = all_data.drop(remove_columns, axis=1)
+# utils.visualizeFeatureCorrelation(visualization='factorplot', feature='SibSp', target=TARGET, dataset=train)
+# utils.visualizeFeatureCorrelation(visualization='factorplot', feature='Parch', target=TARGET, dataset=train)
+# utils.visualizeFeatureCorrelation(visualization='factorplot', feature='Embarked', target=TARGET, dataset=train)
+# utils.visualizeFeatureCorrelation(visualization='facetgrid', feature='Age', target=TARGET, dataset=train)
+# utils.visualizeFeatureCorrelation(visualization='facetgrid', feature='Fare', target=TARGET, dataset=train)
+# utils.visualizeFeatureCorrelation(visualization='barplot', feature='Sex', target=TARGET, dataset=train)
+# utils.visualizeFeatureCorrelation(visualization='barplot', feature='Pclass', target=TARGET, dataset=train)
+'''
+- Fare = highest correlation with survival (0.26)
+- SibSp & Parch decently correlated with eachother (0.41)
+- SibSp, Parch, Embarked, Sex, Pclass seem to make a difference with survival
+'''
 
 # Clean, Encode Numerics & Categories
 # ------------------------------------
 print('~ cleaning & encoding ~')
 
-all_data = pd.get_dummies(all_data)
+# cateogrize names by titles into [ 'Mr', 'Lady', 'Master', 'Other' ]
+all_data['title'] = pd.Series([i.split(',')[1].split('.')[0].strip() for i in all_data['Name']])
+non_other_titles = ['Mrs', 'Miss', 'Ms', 'Mme', 'Mlle', 'Mr', 'Master']
+all_data['title'] = all_data['title'].map(lambda s: 'Other' if s not in non_other_titles else s)
+grouped_lady_titles = ['Mrs', 'Miss', 'Mme', 'Mlle', 'Ms']
+ignore_titles = ['Mr', 'Master', 'Other']
+all_data['title'] = all_data['title'].map(lambda s: 'Lady' if s in non_other_titles and s not in ignore_titles else s)
+all_data = all_data.drop(['Name'], axis=1)
+
+# classify by cabin group only instead of group+room
+all_data['Cabin'] = pd.Series([i[0] if not pd.isnull(i) else 'X' for i in all_data['Cabin'] ])
+all_data['Cabin'] = all_data['Cabin'].fillna('X')
+
+# parse ticket prefix (the # is useless)
+ticket_parsed = []
+for i in list(all_data['Ticket']):
+  if not i.isdigit():
+    ticket_parsed.append(i.replace('.','').replace('/','').strip().split(' ')[0]) 
+  else:
+    ticket_parsed.append('X')
+all_data['Ticket'] = ticket_parsed
+
+# convert categorical
+all_data = pd.get_dummies(all_data, columns=['title'], prefix='title')
+all_data = pd.get_dummies(all_data, columns=['Embarked'], prefix='em')
+all_data = pd.get_dummies(all_data, columns=['Ticket'], prefix='tx')
+all_data = pd.get_dummies(all_data, columns=['Cabin'], prefix='cab')
+all_data = pd.get_dummies(all_data, columns=['Sex'], prefix='sex')
+
+# fill in any remaining null values
 all_data = all_data.fillna(all_data.mean())
 
-clean_train = pd.concat([all_data[:train.shape[0]], train.SalePrice], axis=1)
+clean_train = pd.concat([all_data[:train.shape[0]], train[TARGET]], axis=1)
+
+# Skew Analysis
+# ------------
+print('~ skew analysis ~')
+# utils.visualizeSkew(clean_train, 'Fare')
+clean_train['Fare'] = clean_train['Fare'].map(lambda i: np.log(i) if i > 0 else 0)
+# utils.visualizeSkew(clean_train, 'Fare')
 
 # Outlier Analysis
 # ----------------
 print('~ outlier analysis ~')
-# outlierAnalysis(train, 'SalePrice')
-utils.dropOutliers(clean_train, 'LotFrontage', 220)
-utils.dropOutliers(clean_train, 'LotArea', 110000)
-utils.dropOutliers(clean_train, 'BsmtFinSF1', 2500)
-utils.dropOutliers(clean_train, 'BsmtFinSF2', 3500)
-utils.dropOutliers(clean_train, 'TotalBsmtSF', 3500)
-utils.dropOutliers(clean_train, '1stFlrSF', 4000)
+# utils.outlierAnalysis(train, TARGET)
 
 # Train / Val / Test Datasets
 # ---------------------------
 print('~ prepairing datasets ~')
 X_test = all_data[train.shape[0]:]
-Y_train = clean_train.pop('SalePrice')
+Y_train = clean_train.pop(TARGET)
 X_train = clean_train
 
 Y_train_cross_val = Y_train
@@ -113,52 +129,51 @@ utils.print_dataset_stats(X_train, Y_train, X_val, Y_val, X_test)
 # Model
 # -----
 print('~ training test/val split model(s) ~')
-model_random_forest = RandomForestRegressor().fit(X_train,Y_train)
-model_gradient_boosting_regressor = GradientBoostingRegressor().fit(X_train,Y_train)
-model_ada_boost_regressor = AdaBoostRegressor().fit(X_train,Y_train)
-model_xgb_boost = XGBRegressor(objective='reg:squarederror').fit(X_train,Y_train)
+model_random_forest = RandomForestClassifier().fit(X_train,Y_train)
+model_gradient_boosting = GradientBoostingClassifier().fit(X_train,Y_train)
+model_ada_boost = AdaBoostClassifier().fit(X_train,Y_train)
+model_logistic_regression = LogisticRegression( max_iter=10000 ).fit(X_train,Y_train)
 
 print('~ scoring test/val split model(s) ~')
 model_score_results = [
-  {'model': 'Random Forest Regressor', 'score': model_random_forest.score(X_val, Y_val)},
-  {'model': 'Gradient Boosting Regressor', 'score': model_gradient_boosting_regressor.score(X_val, Y_val)},
-  {'model': 'ADA Boost Regressor', 'score': model_ada_boost_regressor.score(X_val, Y_val)},
-  {'model': 'XGB Boost Regressor', 'score': model_xgb_boost.score(X_val, Y_val)}
+  {'model': 'Random Forest Classifier', 'score': model_random_forest.score(X_val, Y_val)},
+  {'model': 'Gradient Boosting Classifier', 'score': model_gradient_boosting.score(X_val, Y_val)},
+  {'model': 'ADA Boost Classifier', 'score': model_ada_boost.score(X_val, Y_val)},
+  {'model': 'Logistic Regression', 'score': model_logistic_regression.score(X_val, Y_val)}
 ]
 utils.printScoreResultsTrainVal(model_score_results, score_type='R2')
 
 print('~ training k-fold cross-validation model(s) ~')
-model_random_forest = RandomForestRegressor().fit(X_train_cross_val,Y_train_cross_val)
-model_gradient_boosting_regressor = GradientBoostingRegressor().fit(X_train_cross_val,Y_train_cross_val)
-model_ada_boost_regressor = AdaBoostRegressor().fit(X_train_cross_val,Y_train_cross_val)
-model_xgb_boost = XGBRegressor(objective='reg:squarederror').fit(X_train_cross_val,Y_train_cross_val)
+model_random_forest = RandomForestClassifier().fit(X_train_cross_val,Y_train_cross_val)
+model_gradient_boosting = GradientBoostingClassifier().fit(X_train_cross_val,Y_train_cross_val)
+model_ada_boost = AdaBoostClassifier().fit(X_train_cross_val,Y_train_cross_val)
+model_logistic_regression = LogisticRegression( max_iter=10000 ).fit(X_train_cross_val,Y_train_cross_val)
 
 print('~ scoring k-fold cross-validation model(s) ~')
 model_score_results = [
-  {'model': 'Random Forest Regressor', 'score': cross_val_score(model_random_forest, X_train_cross_val, Y_train_cross_val, cv=CROSS_VALIDATION_K_FOLDS)},
-  {'model': 'Gradient Boosting Regressor', 'score': cross_val_score(model_gradient_boosting_regressor, X_train_cross_val, Y_train_cross_val, cv=CROSS_VALIDATION_K_FOLDS)},
-  {'model': 'ADA Boost Regressor', 'score': cross_val_score(model_ada_boost_regressor, X_train_cross_val, Y_train_cross_val, cv=CROSS_VALIDATION_K_FOLDS)},
-  {'model': 'XGB Boost Regressor', 'score': cross_val_score(model_xgb_boost, X_train_cross_val, Y_train_cross_val, cv=CROSS_VALIDATION_K_FOLDS)}
+  {'model': 'Random Forest Classifier', 'score': cross_val_score(model_random_forest, X_train_cross_val, Y_train_cross_val, cv=CROSS_VALIDATION_K_FOLDS)},
+  {'model': 'Gradient Boosting Classifier', 'score': cross_val_score(model_gradient_boosting, X_train_cross_val, Y_train_cross_val, cv=CROSS_VALIDATION_K_FOLDS)},
+  {'model': 'ADA Boost Classifier', 'score': cross_val_score(model_ada_boost, X_train_cross_val, Y_train_cross_val, cv=CROSS_VALIDATION_K_FOLDS)},
+  {'model': 'Logistic Regression', 'score': cross_val_score(model_logistic_regression, X_train_cross_val, Y_train_cross_val, cv=CROSS_VALIDATION_K_FOLDS)}
 ]
 utils.printScoreResultsKFold(model_score_results)
 
 # Validate
 # --------
 print('~ selecting model ~')
-model = model_gradient_boosting_regressor
+model = model_gradient_boosting
 
 # Predict
 # -------
 print('~ predicting ~')
 predictions = model.predict(X_test)
-predictions = np.exp(predictions) # reverse log function 
-print('Results...')
-print(predictions)
+print('Results (first 10)')
+print(predictions[:10])
 
 # Create Artifact
 # ---------------
 print('~ generating artifacts ~')
-submissions=pd.DataFrame({'Id': X_test.index.values, 'SalePrice': predictions})
-submissions.to_csv(dir_artifacts + 'predictions-random-forest.csv', index=False, header=True)
+submissions=pd.DataFrame({'PassengerId': X_test.index.values, TARGET: predictions})
+submissions.to_csv(dir_artifacts + 'predictions-classical.csv', index=False, header=True)
 
 print('~ done ~')

@@ -1,7 +1,10 @@
 #!/usr/bin/python
 
+import math
 import pandas as pd
 import numpy as np
+import seaborn as sns
+import matplotlib.pyplot as plt
 from sklearn.preprocessing import OneHotEncoder
 from tabulate import tabulate
 
@@ -66,18 +69,31 @@ def outlierAnalysis(dataset, target):
   plt.tight_layout(h_pad=1.0)
   plt.show()
 
-def visualizeCorrelations(dataset, y, num):
+def visualizeCorrelations(dataset, y, threshold, num):
   correlation = dataset.select_dtypes(exclude='object').corr()
-  sns.heatmap(data=correlation>0.80, cmap='YlGnBu', annot=True)
+  if threshold:
+    sns.heatmap(data=correlation>threshold, cmap='YlGnBu', annot=True)
+  else:
+    sns.heatmap(correlation, cmap='YlGnBu', annot=True)
   plt.show()
   top_correlated_features = correlation[y].sort_values(ascending=False).head(num)
   print(top_correlated_features)
 
-def visualizeSkew(dataset, target):
-  y = dataset[target]
+def visualizeFeatureCorrelation(visualization, feature, target, dataset):
+  if (visualization == 'factorplot'):
+    g = sns.factorplot(x=feature,y=target, data=dataset, kind='bar', size=6, palette='muted')
+    g.despine(left=True)
+    g = g.set_ylabels('Target')
+    plt.show()
+  elif (visualization == 'facetgrid'):
+    g = sns.FacetGrid(dataset, col=target)
+    g = g.map(sns.distplot, feature)
+    plt.show()
+  elif (visualization == 'barplot'):
+    g = sns.barplot(x=feature, y=target, data=dataset)
+    plt.show()
+
+def visualizeSkew(dataset, feature):
+  y = dataset[feature]
   sns.distplot(y)
-  plt.title('Raw')
-  plt.show()
-  sns.distplot(np.log(y))
-  plt.title('Log')
   plt.show()
