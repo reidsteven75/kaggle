@@ -1,0 +1,48 @@
+version: '3'
+services:
+
+  notebook:
+    build:
+      context: .
+      dockerfile: Dockerfile.jupyter
+    volumes:
+        - ./models/random-forest/pipeline.py:/notebooks/pipeline.py
+    ports:
+      - "8888:8888"
+
+  titanic-classical:
+    build:
+      context: ./titanic/models/classical
+    volumes:
+        - ./titanic/data:/code/data
+        - ./titanic/artifacts:/code/artifacts
+    ports:
+      - "5000:5000"
+  
+  house-prices-classical:
+    build:
+      context: ./house-prices/models/classical
+    volumes:
+        - ./house-prices/data:/code/data
+        - ./house-prices/artifacts:/code/artifacts
+    ports:
+      - "5001:5001"
+  
+  digit-recognizer-classical:
+    build:
+      context: ./digit-recognizer/models/classical
+    volumes:
+        - ./digit-recognizer/data:/code/data
+        - ./digit-recognizer/artifacts:/code/artifacts
+    ports:
+      - "5002:5002"
+  
+  digit-recognizer-neural-net:
+    build:
+      context: ./digit-recognizer/models/neural-net
+    volumes:
+        - ./digit-recognizer/data:/code/data
+        - ./digit-recognizer/artifacts:/code/artifacts
+    ports:
+      - "5003:5003"
+  

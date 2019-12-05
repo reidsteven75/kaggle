@@ -1,5 +1,4 @@
 #!/usr/bin/python
-
 import pandas as pd
 import numpy as np
 from sklearn.preprocessing import OneHotEncoder
@@ -21,7 +20,7 @@ def printScoreResultsTrainVal(model_score_results, score_type=''):
     table.append([result['model'], result['score']])
   print(tabulate(table, headers=header, tablefmt='fancy_grid'))
 
-def print_dataset_stats(X_train, Y_train, X_val, Y_val, X_test):
+def printDatasets(X_train, Y_train, X_val, Y_val, X_test):
   count_train = np.size(X_train, 0)
   count_val = np.size(X_val, 0)
   count_test = np.size(X_test, 0)

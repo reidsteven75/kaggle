@@ -31,11 +31,9 @@ warnings.simplefilter(action='ignore', category=FutureWarning)
 # ============================
 # - look into bias, variance library - http://rasbt.github.io/mlxtend/user_guide/evaluate/bias_variance_decomp/
 
-dir_data = '../../data/'
-dir_artifacts = '../../artifacts/'
-
-# dir_data = './data/'
-# dir_artifacts = './artifacts/'
+DIR_DATA = './data/'
+DIR_ARTIFACTS = './artifacts/'
+ARTIFACT_NAME = 'predictions.csv'
 
 VAL_TRAIN_RATIO = 0.3  # VAL / TEST
 NUM_CORRELATIONS = 15
@@ -45,8 +43,8 @@ print('~ loading data ~')
 
 # Load Data
 # ---------
-train = pd.read_csv(dir_data + 'train.csv', index_col=0)
-test = pd.read_csv(dir_data + 'test.csv', index_col=0)
+train = pd.read_csv(DIR_DATA + 'train.csv', index_col=0)
+test = pd.read_csv(DIR_DATA + 'test.csv', index_col=0)
 
 all_data = pd.concat((train.loc[:,'MSSubClass':'SaleCondition'],
                       test.loc[:,'MSSubClass':'SaleCondition']))
@@ -99,7 +97,7 @@ X_train_cross_val = X_train
 
 # Generate Validation Dataset
 X_train, X_val, Y_train, Y_val = train_test_split(X_train, Y_train, test_size=VAL_TRAIN_RATIO, shuffle=True, random_state=2)
-utils.print_dataset_stats(X_train, Y_train, X_val, Y_val, X_test)
+utils.printDatasets(X_train, Y_train, X_val, Y_val, X_test)
 
 # Model
 # -----
@@ -150,6 +148,7 @@ print(predictions)
 # ---------------
 print('~ generating artifacts ~')
 submissions=pd.DataFrame({'Id': X_test.index.values, 'SalePrice': predictions})
-submissions.to_csv(dir_artifacts + 'predictions-random-forest.csv', index=False, header=True)
-
+submissions.to_csv(DIR_ARTIFACTS + ARTIFACT_NAME, index=False, header=True)
+print('Artifact file generated:')
+print(ARTIFACT_NAME)
 print('~ done ~')

@@ -26,11 +26,9 @@ warnings.simplefilter(action='ignore', category=FutureWarning)
 # - classify males as married if their last name matches a female with the same last name
 # - classify name titles
 
-dir_data = '../../data/'
-dir_artifacts = '../../artifacts/'
-
-# dir_data = './data/'
-# dir_artifacts = './artifacts/'
+DIR_DATA = './data/'
+DIR_ARTIFACTS = './artifacts/'
+ARTIFACT_NAME = 'predictions.csv'
 
 TARGET = 'Survived'
 VAL_TRAIN_RATIO = 0.3  # VAL / TEST
@@ -41,8 +39,8 @@ print('~ loading data ~')
 
 # Load Data
 # ---------
-train = pd.read_csv(dir_data + 'train.csv', index_col=0)
-test = pd.read_csv(dir_data + 'test.csv', index_col=0)
+train = pd.read_csv(DIR_DATA + 'train.csv', index_col=0)
+test = pd.read_csv(DIR_DATA + 'test.csv', index_col=0)
 
 all_data = pd.concat([train.drop(TARGET, axis=1), test])
 
@@ -174,6 +172,7 @@ print(predictions[:10])
 # ---------------
 print('~ generating artifacts ~')
 submissions=pd.DataFrame({'PassengerId': X_test.index.values, TARGET: predictions})
-submissions.to_csv(dir_artifacts + 'predictions-classical.csv', index=False, header=True)
-
+submissions.to_csv(DIR_ARTIFACTS + ARTIFACT_NAME, index=False, header=True)
+print('Artifact file generated:')
+print(ARTIFACT_NAME)
 print('~ done ~')
