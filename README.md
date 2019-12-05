@@ -1,12 +1,11 @@
-Kaggle Competitions
--------------------
+# Kaggle Competitions
 Models for various Kaggle competitions
 
 ## Prereqs
   - docker
   - docker-compose
   
-## Making Predictions
+## Running Models
 
 Each competition is implemented with classical machine learning techniques, and some are implemented with more advanced machine learning techniques.
 
