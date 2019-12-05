@@ -13,7 +13,7 @@ Each competition is implemented with classical machine learning techniques, and 
 Train & test data can be modified for each model.
 
 
-`Digit Recognizer`
+#### Digit Recognizer
 
 ```
 $ docker-compose up --build digit-recognizer-classical
@@ -23,13 +23,13 @@ $ docker-compose up --build digit-recognizer-classical
 $ docker-compose up --build digit-recognizer-neural-net
 ```
 
-`Titanic Survivor Predictor`
+#### Titanic Survivor Predictor
 
 ```
 $ docker-compose up --build titanic-classical
 ```
 
-`House Price Predictor`
+#### House Price Predictor
 
 ```
 $ docker-compose up --build house-prices-classical
