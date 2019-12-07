@@ -1,5 +1,4 @@
-# Kaggle Competitions
-Models for various Kaggle competitions
+Various predictive models
 
 ## Prereqs
   - docker
@@ -33,3 +32,6 @@ $ docker-compose up --build titanic-classical
 ```
 $ docker-compose up --build house-prices-classical
 ```
+
+## TODO
+  - expose python plotting visualizations
