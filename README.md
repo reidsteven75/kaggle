@@ -1,5 +1,4 @@
-# Kaggle Competitions
-Models for various Kaggle competitions
+Various predictive models
 
 ## Prereqs
   - docker
