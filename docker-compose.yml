@@ -46,3 +46,12 @@ services:
     ports:
       - "5003:5003"
   
+  object-detection-2d:
+    build:
+      context: ./object-detection-2d/models/neural-net
+    volumes:
+        - ./object-detection-2d/data:/code/data
+        - ./object-detection-2d/artifacts:/code/artifacts
+    ports:
+      - "5004:5004"
+  

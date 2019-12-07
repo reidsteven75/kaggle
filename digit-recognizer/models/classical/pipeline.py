@@ -9,7 +9,6 @@ import utils
 
 DIR_DATA = './data/'
 DIR_ARTIFACTS = './artifacts/'
-
 ARTIFACT_NAME = 'predictions.csv'
 
 # Load Data
