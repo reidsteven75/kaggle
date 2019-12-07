@@ -1,0 +1,13 @@
+object-detection-2d_1          | 	 [[{{node IteratorGetNext}}]]
+6/6 [==============================] - 3s 434ms/step - loss: 0.7679 - accuracy: 0.6556
+object-detection-2d_1          | ~ scoring model ~
+object-detection-2d_1          | 1/1 - 1s - loss: 0.9870 - accuracy: 0.5500
+
+transfer, basic
+accuracy = 0.55
+
+basic
+accuracy = 0.5
+
+
+accuracy = 0.55
