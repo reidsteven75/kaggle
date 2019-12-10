@@ -52,6 +52,9 @@ services:
     volumes:
         - ./object-detection-2d/data:/code/data
         - ./object-detection-2d/artifacts:/code/artifacts
+        - ./object-detection-2d/checkpoints:/code/checkpoints
     ports:
       - "5004:5004"
+    environment:
+      - MODE=${MODE}
   
